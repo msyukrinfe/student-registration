@@ -58,7 +58,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
     const found = students.find((s) => s.id === id);
     if (!found) {
-      setStudentError('ไม่พบรหัสนักศึกษานี้ในระบบ กรุณาตรวจสอบอีกครั้งหรือเลือกจากรายชื่อด้านล่าง');
+      setStudentError('ไม่พบรหัสนักศึกษานี้ในระบบ กรุณาตรวจสอบรหัส 10 หลักอีกครั้ง');
       return;
     }
     setStudentError('');

@@ -6,27 +6,7 @@ const junior1 = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/stu
 const junior2 = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/students_junior_part2.json'), 'utf8'));
 const senior = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/students_senior.json'), 'utf8'));
 
-const additionalJunior = [
-  { id: '6812000991', name: 'นาย อิลฮัม สาเด็ง', level: 'junior_high', group: '220026' },
-  { id: '6812000992', name: 'นางสาว ฟารีดา มะแซ', level: 'junior_high', group: '220026' },
-  { id: '6812000993', name: 'นาย ซุลกิฟลี ดาโอะ', level: 'junior_high', group: '220026' },
-  { id: '6912000994', name: 'นางสาว รูซีนา มะยิ', level: 'junior_high', group: '220026' },
-  { id: '6912000995', name: 'นาย ฮาฟิซ สาเด็ง', level: 'junior_high', group: '220026' },
-
-  { id: '6812000996', name: 'นาย อับดุลเลาะ สาบูดิง', level: 'junior_high', group: '220034' },
-  { id: '6812000997', name: 'นางสาว อาซีซะห์ ยะโกะ', level: 'junior_high', group: '220034' },
-  { id: '6812000998', name: 'นาย มูฮัมหมัดซูกรี สะมะแอ', level: 'junior_high', group: '220034' },
-  { id: '6912000999', name: 'นางสาว นูรีดา มะดีเยาะ', level: 'junior_high', group: '220034' },
-  { id: '6912001000', name: 'นาย อัสรัน เจ๊ะเลาะ', level: 'junior_high', group: '220034' },
-
-  { id: '6812001001', name: 'นาย มูฮัมหมัดอารีฟ ลาบูอาปี', level: 'junior_high', group: '220037' },
-  { id: '6812001002', name: 'นางสาว ฮานาน ดือราแม', level: 'junior_high', group: '220037' },
-  { id: '6812001003', name: 'นาย ฟาริส หะยีอาแว', level: 'junior_high', group: '220037' },
-  { id: '6912001004', name: 'นางสาว โรสนานี แวหะมะ', level: 'junior_high', group: '220037' },
-  { id: '6912001005', name: 'นาย มูฮำมัดฟาอีส บือโต', level: 'junior_high', group: '220037' },
-];
-
-const allJunior = [...junior1, ...junior2, ...additionalJunior];
+const allJunior = [...junior1, ...junior2];
 
 const rawStudents = [];
 

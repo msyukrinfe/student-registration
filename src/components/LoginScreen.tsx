@@ -57,7 +57,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
     const found = students.find((s) => s.id === id);
     if (!found) {
-      setStudentError('ไม่พบรหัสนักศึกษานี้ในระบบ กรุณาตรวจสอบหรือคลิกเลือกจากรายชื่อด้านล่าง');
+      setStudentError('ไม่พบรหัสนักศึกษานี้ในระบบ กรุณาตรวจสอบรหัส 10 หลักอีกครั้ง');
       return;
     }
     setStudentError('');

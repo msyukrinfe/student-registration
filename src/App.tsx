@@ -37,11 +37,15 @@ import {
   saveFirestoreSettings,
 } from './services/firebase';
 
-const DB_VERSION_KEY = 'skr_clean_db_v6_1040_complete';
+const DB_VERSION_KEY = 'skr_clean_db_v8_1018_all_verified';
 
 function getInitialDataCleanly() {
   try {
-    if (localStorage.getItem('skr_db_version') !== DB_VERSION_KEY) {
+    const cachedVersion = localStorage.getItem('skr_db_version');
+    const cachedStudents = localStorage.getItem('skr_students');
+    const isAuthentic = cachedStudents && cachedStudents.includes('6513000249');
+
+    if (cachedVersion !== DB_VERSION_KEY || !isAuthentic) {
       localStorage.clear();
       localStorage.setItem('skr_db_version', DB_VERSION_KEY);
       localStorage.setItem('skr_students', JSON.stringify(INITIAL_STUDENTS));
@@ -72,7 +76,7 @@ export default function App() {
       const saved = localStorage.getItem('skr_students');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= INITIAL_STUDENTS.length) {
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_STUDENTS.length && parsed.some(s => s.id === '6513000249')) {
           return parsed;
         }
       }
@@ -144,7 +148,7 @@ export default function App() {
             INITIAL_COURSES.forEach((c) => saveFirestoreCourse(c));
           }
 
-          if (cloudStudents && cloudStudents.length >= INITIAL_STUDENTS.length) {
+          if (cloudStudents && cloudStudents.length >= INITIAL_STUDENTS.length && cloudStudents.some(s => s.id === '6513000249')) {
             setStudents(cloudStudents);
           } else {
             setStudents(INITIAL_STUDENTS);
