@@ -356,9 +356,7 @@ export const RegistrationDocument: React.FC<RegistrationDocumentProps> = ({
                 <div>
                   <div className="flex items-baseline">
                     <span className="whitespace-nowrap">ลงชื่อ</span>
-                    <span className="border-b border-dotted border-black flex-1 mx-1 text-center font-medium">
-                      {record.status !== 'draft' ? record.studentSignatureName || record.studentName : ''}
-                    </span>
+                    <span className="border-b border-dotted border-black flex-1 mx-1 min-h-[1.2em]"></span>
                     <span className="whitespace-nowrap">นักศึกษา</span>
                   </div>
                   <div className="text-center mt-0.5">
@@ -369,11 +367,7 @@ export const RegistrationDocument: React.FC<RegistrationDocumentProps> = ({
                 <div>
                   <div className="flex items-baseline">
                     <span className="whitespace-nowrap">ลงชื่อ</span>
-                    <span className="border-b border-dotted border-black flex-1 mx-1 text-center font-medium">
-                      {record.status === 'approved' || record.status === 'recorded'
-                        ? record.teacherSignatureName || student?.advisorName || 'ครูที่ปรึกษา'
-                        : ''}
-                    </span>
+                    <span className="border-b border-dotted border-black flex-1 mx-1 min-h-[1.2em]"></span>
                     <span className="whitespace-nowrap">ครู</span>
                   </div>
                   <div className="text-center mt-0.5">
@@ -387,11 +381,7 @@ export const RegistrationDocument: React.FC<RegistrationDocumentProps> = ({
                 <div>
                   <div className="flex items-baseline">
                     <span className="whitespace-nowrap">ลงชื่อ</span>
-                    <span className="border-b border-dotted border-black flex-1 mx-1 text-center font-medium">
-                      {record.status === 'recorded'
-                        ? record.registrarSignatureName || settings.defaultRegistrarName
-                        : ''}
-                    </span>
+                    <span className="border-b border-dotted border-black flex-1 mx-1 min-h-[1.2em]"></span>
                     <span className="whitespace-nowrap">เจ้าหน้าที่ทะเบียน</span>
                   </div>
                   <div className="text-center mt-0.5">
