@@ -89,9 +89,11 @@ export async function loadFirestoreStudents(): Promise<Student[] | null> {
 
 export async function saveFirestoreStudentsBatch(students: Student[]): Promise<void> {
   try {
-    // Save in parallel chunks
-    const promises = students.map((s) => setDoc(doc(db, 'students', s.id), s));
-    await Promise.all(promises);
+    const CHUNK_SIZE = 30;
+    for (let i = 0; i < students.length; i += CHUNK_SIZE) {
+      const chunk = students.slice(i, i + CHUNK_SIZE);
+      await Promise.all(chunk.map((s) => setDoc(doc(db, 'students', s.id), s)));
+    }
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, 'students');
   }

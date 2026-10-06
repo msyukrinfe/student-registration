@@ -42,6 +42,7 @@ interface AdminPortalProps {
   onUpdateGroups: (groups: Group[]) => void;
   onUpdateRegistrations: (registrations: RegistrationRecord[]) => void;
   onUpdateSettings: (settings: SystemSettings) => void;
+  onResetAllData?: () => Promise<boolean> | void;
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
@@ -55,8 +56,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onUpdateGroups,
   onUpdateRegistrations,
   onUpdateSettings,
+  onResetAllData,
 }) => {
   const [activeMainTab, setActiveMainTab] = useState<'overview' | 'courses' | 'students' | 'settings'>('overview');
+  const [resetToast, setResetToast] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Course Management states
   const [courseLevelTab, setCourseLevelTab] = useState<EducationLevel>('senior_high');
@@ -94,6 +98,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Group filter for overview
   const [overviewGroupFilter, setOverviewGroupFilter] = useState<string>('all');
+
+  // Student list filters & pagination
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [studentLevelFilter, setStudentLevelFilter] = useState<'all' | EducationLevel>('all');
+  const [studentPage, setStudentPage] = useState(1);
+  const pageSize = 50;
 
   // Course handlers
   const handleOpenAddCourse = () => {
@@ -230,13 +240,40 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       return a.orderNumber - b.orderNumber;
     });
 
+  const handleResetDatabaseClick = async () => {
+    if (
+      window.confirm(
+        'คุณต้องการล้างฐานข้อมูลเดิมทั้งหมด แล้วดึงข้อมูลจาก 2 ไฟล์ (1,040 คน) แทนใช่หรือไม่?\n\n• ระดับประถมศึกษา: 69 คน\n• ระดับมัธยมศึกษาตอนต้น: 465 คน\n• ระดับมัธยมศึกษาตอนปลาย: 506 คน\n• รวมทั้งหมด: 1,040 คน'
+      )
+    ) {
+      if (onResetAllData) {
+        setIsResetting(true);
+        await onResetAllData();
+        setIsResetting(false);
+        setResetToast(true);
+        setTimeout(() => setResetToast(false), 6000);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Toast Notification */}
+      {/* Toast Notification for Settings */}
       {settingsSavedToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>บันทึกการตั้งค่าระบบเรียบร้อยแล้ว</span>
+        </div>
+      )}
+
+      {/* Toast Notification for Database Reset */}
+      {resetToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-950 text-white text-xs px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-700 animate-fade-in">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div>
+            <p className="font-bold text-sm">ล้างฐานข้อมูลเดิมและนำเข้าข้อมูลใหม่เรียบร้อยแล้ว!</p>
+            <p className="text-emerald-200 text-[11px] mt-0.5">รวม 1,040 คน (ประถม 69 คน, ม.ต้น 465 คน, ม.ปลาย 506 คน)</p>
+          </div>
         </div>
       )}
 
@@ -260,7 +297,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={handleResetDatabaseClick}
+              disabled={isResetting}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl shadow-xs transition-colors disabled:opacity-50"
+              title="ล้างฐานข้อมูลเดิมทั้งหมด แล้วดึงข้อมูลจาก 2 ไฟล์ (1,040 คน) ใหม่ทันที"
+            >
+              <RotateCcw className={`w-4 h-4 text-rose-600 ${isResetting ? 'animate-spin' : ''}`} />
+              <span>{isResetting ? 'กำลังล้างและดึงข้อมูล...' : 'ล้างและดึงข้อมูลจาก 2 ไฟล์ (1,040 คน)'}</span>
+            </button>
+
             {approvedCount > 0 && (
               <button
                 onClick={handleRecordAllApproved}
@@ -371,6 +419,63 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 เสร็จสมบูรณ์ 100%
               </div>
+            </div>
+          </div>
+
+          {/* 3 Education Level Breakdown Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-900">ระดับประถมศึกษา</span>
+                <span className="text-[10px] bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded-full font-semibold font-mono">
+                  กลุ่ม 21xxxx
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold font-mono text-amber-950">
+                  {students.filter((s) => s.level === 'primary').length}
+                </span>
+                <span className="text-xs text-amber-800">คน</span>
+              </div>
+              <p className="text-[11px] text-amber-700/90 mt-1">
+                7 กลุ่มที่มีผู้เรียนลงทะเบียนในภาคเรียนนี้
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-blue-900">ระดับมัธยมศึกษาตอนต้น</span>
+                <span className="text-[10px] bg-blue-200/70 text-blue-900 px-2 py-0.5 rounded-full font-semibold font-mono">
+                  กลุ่ม 22xxxx
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold font-mono text-blue-950">
+                  {students.filter((s) => s.level === 'junior_high').length}
+                </span>
+                <span className="text-xs text-blue-800">คน</span>
+              </div>
+              <p className="text-[11px] text-blue-700/90 mt-1">
+                ครอบคลุม 23 กลุ่ม ศกร.ตำบล
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-900">ระดับมัธยมศึกษาตอนปลาย</span>
+                <span className="text-[10px] bg-emerald-200/70 text-emerald-900 px-2 py-0.5 rounded-full font-semibold font-mono">
+                  กลุ่ม 23xxxx
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold font-mono text-emerald-950">
+                  {students.filter((s) => s.level === 'senior_high').length}
+                </span>
+                <span className="text-xs text-emerald-800">คน</span>
+              </div>
+              <p className="text-[11px] text-emerald-700/90 mt-1">
+                ครอบคลุม 23 กลุ่ม ศกร.ตำบล
+              </p>
             </div>
           </div>
 
@@ -700,99 +805,245 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       )}
 
       {/* ================= TAB 3: STUDENTS & GROUPS ================= */}
-      {activeMainTab === 'students' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">
-                  รายชื่อนักศึกษาทั้งหมด ({students.length} คน)
-                </h2>
-                <p className="text-xs text-slate-500">
-                  ฐานข้อมูลนักศึกษาทุกกลุ่มและทุกระดับการศึกษา
-                </p>
+      {activeMainTab === 'students' && (() => {
+        const filteredStudents = students.filter((s) => {
+          if (studentLevelFilter !== 'all' && s.level !== studentLevelFilter) return false;
+          if (studentSearchQuery.trim()) {
+            const q = studentSearchQuery.toLowerCase().trim();
+            return (
+              s.fullName.toLowerCase().includes(q) ||
+              s.id.includes(q) ||
+              s.groupCode.includes(q) ||
+              s.advisorName.toLowerCase().includes(q)
+            );
+          }
+          return true;
+        });
+
+        const totalPages = Math.ceil(filteredStudents.length / pageSize) || 1;
+        const currentPage = Math.min(studentPage, totalPages);
+        const paginatedStudents = filteredStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+        const primaryCount = students.filter((s) => s.level === 'primary').length;
+        const juniorCount = students.filter((s) => s.level === 'junior_high').length;
+        const seniorCount = students.filter((s) => s.level === 'senior_high').length;
+
+        return (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900">
+                    ฐานข้อมูลนักศึกษาทั้งหมด ({students.length} คน)
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    ประถม: {primaryCount} คน · ม.ต้น: {juniorCount} คน · ม.ปลาย: {seniorCount} คน
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Search box */}
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="ค้นหารหัส, ชื่อ-สกุล, กลุ่ม..."
+                      value={studentSearchQuery}
+                      onChange={(e) => {
+                        setStudentSearchQuery(e.target.value);
+                        setStudentPage(1);
+                      }}
+                      className="pl-9 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs w-56 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                    />
+                  </div>
+
+                  {/* Level Filter Tabs */}
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStudentLevelFilter('all');
+                        setStudentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        studentLevelFilter === 'all'
+                          ? 'bg-white text-slate-900 shadow-xs font-semibold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ทั้งหมด ({students.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStudentLevelFilter('primary');
+                        setStudentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        studentLevelFilter === 'primary'
+                          ? 'bg-amber-600 text-white shadow-xs font-semibold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ประถม ({primaryCount})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStudentLevelFilter('junior_high');
+                        setStudentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        studentLevelFilter === 'junior_high'
+                          ? 'bg-blue-600 text-white shadow-xs font-semibold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ม.ต้น ({juniorCount})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStudentLevelFilter('senior_high');
+                        setStudentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        studentLevelFilter === 'senior_high'
+                          ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ม.ปลาย ({seniorCount})
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/80 text-slate-600 border-b border-slate-200">
-                    <th className="py-3 px-3 font-semibold text-center w-12">ที่</th>
-                    <th className="py-3 px-3 font-semibold w-28">รหัสนักศึกษา</th>
-                    <th className="py-3 px-3 font-semibold">ชื่อ - สกุล</th>
-                    <th className="py-3 px-3 font-semibold w-28">ระดับการศึกษา</th>
-                    <th className="py-3 px-3 font-semibold">กลุ่มเรียน</th>
-                    <th className="py-3 px-3 font-semibold">ครูที่ปรึกษา</th>
-                    <th className="py-3 px-3 font-semibold text-center w-28">สถานะการลงทะเบียน</th>
-                    <th className="py-3 px-3 font-semibold text-right w-24">แบบฟอร์ม</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {students.map((std, idx) => {
-                    const reg = registrations.find((r) => r.studentId === std.id);
-                    const lvlConfig = EDUCATION_LEVELS.find((l) => l.id === std.level);
-
-                    return (
-                      <tr key={std.id} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="py-3 px-3 text-center text-slate-400 font-mono">{idx + 1}</td>
-                        <td className="py-3 px-3 font-mono font-bold text-slate-700">{std.id}</td>
-                        <td className="py-3 px-3 font-semibold text-slate-800">{std.fullName}</td>
-                        <td className="py-3 px-3">
-                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px]">
-                            {lvlConfig?.shortName}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-slate-600">
-                          {std.groupName} ({std.groupCode})
-                        </td>
-                        <td className="py-3 px-3 text-slate-600">{std.advisorName}</td>
-                        <td className="py-3 px-3 text-center">
-                          {reg?.status === 'recorded' ? (
-                            <span className="inline-block bg-teal-50 text-teal-700 px-2 py-0.5 rounded text-[11px] font-medium border border-teal-200">
-                              บันทึกแล้ว
-                            </span>
-                          ) : reg?.status === 'approved' ? (
-                            <span className="inline-block bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-                              ครูอนุมัติแล้ว
-                            </span>
-                          ) : reg?.status === 'pending_teacher' ? (
-                            <span className="inline-block bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium border border-blue-200">
-                              รอครูอนุมัติ
-                            </span>
-                          ) : (
-                            <span className="inline-block bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[11px] font-medium border border-amber-200">
-                              ยังไม่ลงทะเบียน
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          {reg && reg.items && reg.items.length > 0 ? (
-                            <button
-                              onClick={() =>
-                                setPreviewDoc({
-                                  record: reg,
-                                  student: std,
-                                })
-                              }
-                              className="p-1.5 text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
-                              title="ดูและพิมพ์ใบลงทะเบียน (PDF)"
-                            >
-                              <FileCheck className="w-4 h-4" />
-                            </button>
-                          ) : (
-                            <span className="text-slate-300">-</span>
-                          )}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/80 text-slate-600 border-b border-slate-200">
+                      <th className="py-3 px-3 font-semibold text-center w-12">ที่</th>
+                      <th className="py-3 px-3 font-semibold w-28">รหัสนักศึกษา</th>
+                      <th className="py-3 px-3 font-semibold">ชื่อ - สกุล</th>
+                      <th className="py-3 px-3 font-semibold w-28">ระดับการศึกษา</th>
+                      <th className="py-3 px-3 font-semibold">กลุ่มเรียน</th>
+                      <th className="py-3 px-3 font-semibold">ครูที่ปรึกษา</th>
+                      <th className="py-3 px-3 font-semibold text-center w-28">สถานะการลงทะเบียน</th>
+                      <th className="py-3 px-3 font-semibold text-right w-24">แบบฟอร์ม</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {paginatedStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-12 text-center text-slate-400">
+                          ไม่พบข้อมูลนักศึกษาตามเงื่อนไขที่ค้นหา
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ) : (
+                      paginatedStudents.map((std, idx) => {
+                        const reg = registrations.find((r) => r.studentId === std.id);
+                        const lvlConfig = EDUCATION_LEVELS.find((l) => l.id === std.level);
+                        const rowNumber = (currentPage - 1) * pageSize + idx + 1;
+
+                        return (
+                          <tr key={std.id} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="py-2.5 px-3 text-center text-slate-400 font-mono">{rowNumber}</td>
+                            <td className="py-2.5 px-3 font-mono font-bold text-slate-700">{std.id}</td>
+                            <td className="py-2.5 px-3 font-semibold text-slate-800">{std.fullName}</td>
+                            <td className="py-2.5 px-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                std.level === 'primary' ? 'bg-amber-100 text-amber-800' :
+                                std.level === 'junior_high' ? 'bg-blue-100 text-blue-800' :
+                                'bg-emerald-100 text-emerald-800'
+                              }`}>
+                                {lvlConfig?.shortName}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600">
+                              {std.groupName} ({std.groupCode})
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600">{std.advisorName}</td>
+                            <td className="py-2.5 px-3 text-center">
+                              {reg?.status === 'recorded' ? (
+                                <span className="inline-block bg-teal-50 text-teal-700 px-2 py-0.5 rounded text-[11px] font-medium border border-teal-200">
+                                  บันทึกแล้ว
+                                </span>
+                              ) : reg?.status === 'approved' ? (
+                                <span className="inline-block bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
+                                  ครูอนุมัติแล้ว
+                                </span>
+                              ) : reg?.status === 'pending_teacher' ? (
+                                <span className="inline-block bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium border border-blue-200">
+                                  รอครูอนุมัติ
+                                </span>
+                              ) : (
+                                <span className="inline-block bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[11px] font-medium border border-amber-200">
+                                  ยังไม่ลงทะเบียน
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              {reg && reg.items && reg.items.length > 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setPreviewDoc({
+                                      record: reg,
+                                      student: std,
+                                    })
+                                  }
+                                  className="p-1.5 text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                                  title="ดูและพิมพ์ใบลงทะเบียน (PDF)"
+                                >
+                                  <FileCheck className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <span className="text-slate-300">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination bar */}
+              {totalPages > 1 && (
+                <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 bg-slate-50/50">
+                  <span>
+                    แสดง {Math.min((currentPage - 1) * pageSize + 1, filteredStudents.length)} -{' '}
+                    {Math.min(currentPage * pageSize, filteredStudents.length)} จาก {filteredStudents.length} คน
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1}
+                      onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
+                      className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                    >
+                      ก่อนหน้า
+                    </button>
+                    <span className="px-2 font-mono font-medium">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setStudentPage((p) => Math.min(totalPages, p + 1))}
+                      className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                    >
+                      ถัดไป
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ================= TAB 4: SETTINGS ================= */}
       {activeMainTab === 'settings' && (
@@ -879,6 +1130,47 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </button>
             </div>
           </form>
+
+          {/* Database Reset & Sync Card */}
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-rose-600" />
+              จัดการฐานข้อมูลจาก 2 ไฟล์ทางการ (Database Reset & Sync)
+            </h3>
+            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+              หากต้องการรีเซ็ตฐานข้อมูลเดิมทั้งหมดและดึงข้อมูลใหม่จากไฟล์ฐานข้อมูลครูและฐานข้อมูลผู้เรียน
+              ระบบจะตั้งค่าข้อมูลนักศึกษาทั้งหมด <strong>1,040 คน</strong> พร้อมผูกกลุ่มเรียนและครูที่ปรึกษาใหม่อัตโนมัติ
+            </p>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-xs space-y-1.5 text-slate-700 font-mono">
+              <div className="flex justify-between">
+                <span className="font-sans text-slate-600">ระดับประถมศึกษา:</span>
+                <span className="font-bold text-amber-900">69 คน (7 กลุ่ม)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-sans text-slate-600">ระดับมัธยมศึกษาตอนต้น:</span>
+                <span className="font-bold text-blue-900">465 คน (21 กลุ่ม)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-sans text-slate-600">ระดับมัธยมศึกษาตอนปลาย:</span>
+                <span className="font-bold text-emerald-900">506 คน (23 กลุ่ม)</span>
+              </div>
+              <div className="flex justify-between pt-1 border-t border-slate-200 text-slate-900 font-bold">
+                <span className="font-sans">รวมนักศึกษาทั้งหมด:</span>
+                <span className="text-purple-900">1,040 คน (64 กลุ่มเรียน, 23 ครู)</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleResetDatabaseClick}
+              disabled={isResetting}
+              className="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold transition-colors shadow-xs flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <RotateCcw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
+              <span>{isResetting ? 'กำลังล้างและดึงข้อมูลใหม่...' : 'ล้างฐานข้อมูลเดิมทั้งหมด และดึงข้อมูลจาก 2 ไฟล์ (1,040 คน)'}</span>
+            </button>
+          </div>
         </div>
       )}
 

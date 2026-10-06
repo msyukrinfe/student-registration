@@ -37,6 +37,25 @@ import {
   saveFirestoreSettings,
 } from './services/firebase';
 
+const DB_VERSION_KEY = 'skr_clean_db_v6_1040_complete';
+
+function getInitialDataCleanly() {
+  try {
+    if (localStorage.getItem('skr_db_version') !== DB_VERSION_KEY) {
+      localStorage.clear();
+      localStorage.setItem('skr_db_version', DB_VERSION_KEY);
+      localStorage.setItem('skr_students', JSON.stringify(INITIAL_STUDENTS));
+      localStorage.setItem('skr_groups', JSON.stringify(INITIAL_GROUPS));
+      localStorage.setItem('skr_courses', JSON.stringify(INITIAL_COURSES));
+      localStorage.setItem('skr_registrations', JSON.stringify(INITIAL_REGISTRATIONS));
+      localStorage.setItem('skr_settings', JSON.stringify(INITIAL_SETTINGS));
+    }
+  } catch {
+    // ignore
+  }
+}
+getInitialDataCleanly();
+
 export default function App() {
   // Database states with localStorage + Firebase persistence
   const [courses, setCourses] = useState<Course[]>(() => {
@@ -51,7 +70,13 @@ export default function App() {
   const [students, setStudents] = useState<Student[]>(() => {
     try {
       const saved = localStorage.getItem('skr_students');
-      return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_STUDENTS.length) {
+          return parsed;
+        }
+      }
+      return INITIAL_STUDENTS;
     } catch {
       return INITIAL_STUDENTS;
     }
@@ -119,9 +144,10 @@ export default function App() {
             INITIAL_COURSES.forEach((c) => saveFirestoreCourse(c));
           }
 
-          if (cloudStudents && cloudStudents.length > 0) {
+          if (cloudStudents && cloudStudents.length >= INITIAL_STUDENTS.length) {
             setStudents(cloudStudents);
           } else {
+            setStudents(INITIAL_STUDENTS);
             saveFirestoreStudentsBatch(INITIAL_STUDENTS);
           }
 
@@ -218,6 +244,31 @@ export default function App() {
     saveFirestoreSettings(newSettings).catch((e) => console.warn(e));
   };
 
+  const handleResetAllData = async (): Promise<boolean> => {
+    try {
+      localStorage.clear();
+      localStorage.setItem('skr_db_version', DB_VERSION_KEY);
+      localStorage.setItem('skr_students', JSON.stringify(INITIAL_STUDENTS));
+      localStorage.setItem('skr_groups', JSON.stringify(INITIAL_GROUPS));
+      localStorage.setItem('skr_courses', JSON.stringify(INITIAL_COURSES));
+      localStorage.setItem('skr_registrations', JSON.stringify(INITIAL_REGISTRATIONS));
+      localStorage.setItem('skr_settings', JSON.stringify(INITIAL_SETTINGS));
+
+      setStudents(INITIAL_STUDENTS);
+      setGroups(INITIAL_GROUPS);
+      setCourses(INITIAL_COURSES);
+      setRegistrations(INITIAL_REGISTRATIONS);
+      setSettings(INITIAL_SETTINGS);
+
+      // Re-seed to cloud
+      saveFirestoreStudentsBatch(INITIAL_STUDENTS).catch((e) => console.warn(e));
+      return true;
+    } catch (err) {
+      console.warn('Error during reset:', err);
+      return false;
+    }
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
   };
@@ -249,29 +300,6 @@ export default function App() {
         term={settings.term}
         academicYear={settings.academicYear}
       />
-
-      {/* Cloud Status Badge */}
-      <div className="no-print bg-slate-100 border-b border-slate-200 py-1 px-4 text-center text-[11px] text-slate-500 flex items-center justify-center gap-2">
-        <span
-          className={`w-2 h-2 rounded-full ${
-            firebaseStatus === 'connected'
-              ? 'bg-emerald-500'
-              : firebaseStatus === 'connecting'
-              ? 'bg-amber-500 animate-ping'
-              : 'bg-slate-400'
-          }`}
-        />
-        <span>
-          ฐานข้อมูล Firebase (โปรเจ็ค <strong>student registration</strong>):{' '}
-          {firebaseStatus === 'connected' ? (
-            <span className="text-emerald-700 font-medium">เชื่อมต่อระบบคลาวด์ Firestore พร้อมใช้งาน</span>
-          ) : firebaseStatus === 'connecting' ? (
-            <span className="text-amber-700 font-medium">กำลังเชื่อมต่อคลาวด์...</span>
-          ) : (
-            <span className="text-slate-600">พร้อมใช้งาน (ระบบบันทึกข้อมูลแบบออฟไลน์/แคช)</span>
-          )}
-        </span>
-      </div>
 
       {/* Main Viewport Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -324,6 +352,7 @@ export default function App() {
             onUpdateGroups={setGroups}
             onUpdateRegistrations={setRegistrations}
             onUpdateSettings={handleUpdateSettings}
+            onResetAllData={handleResetAllData}
           />
         )}
       </main>

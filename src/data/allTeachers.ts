@@ -5,8 +5,8 @@ export interface RawTeacherRecord {
 }
 
 export const RAW_TEACHERS: RawTeacherRecord[] = [
-  { groupCodes: ['210037', '220037', '230037'], name: 'มูฮามดัสกรี ลาบูอาปี', role: 'Admin' },
-  { groupCodes: ['210038', '220038', '230036'], name: 'สุกรี สาเมา๊ะ', role: 'Admin' },
+  { groupCodes: ['210037', '220037', '230037'], name: 'มูฮามดัสกรี ลาบูอาปี', role: 'ครู' },
+  { groupCodes: ['210038', '220038', '230036'], name: 'สุกรี สาเมา๊ะ', role: 'ครู' },
   { groupCodes: ['210001', '220001', '230001'], name: 'รุสดา นิดิง', role: 'ครู' },
   { groupCodes: ['210016', '220016', '230016'], name: 'กิสนี ตอเละ', role: 'ครู' },
   { groupCodes: ['220040', '230038'], name: 'นุรอาซียะ แซมิง', role: 'ครู' },
@@ -14,9 +14,9 @@ export const RAW_TEACHERS: RawTeacherRecord[] = [
   { groupCodes: ['220026', '230032'], name: 'กาตีนี สาเด็ง', role: 'ครู' },
   { groupCodes: ['210023', '220023', '230023'], name: 'กาญจนา พรศิริ', role: 'ครู' },
   { groupCodes: ['210002', '230033'], name: 'ซูไรนับ หะยีวาเด็ง', role: 'ครู' },
-  { groupCodes: ['210022', '220022', '230023'], name: 'สาลือมา บือซา', role: 'ครู' },
+  { groupCodes: ['210022', '220022', '230022'], name: 'สาลือมา บือซา', role: 'ครู' },
   { groupCodes: ['220005', '230005'], name: 'สุไฮนา มะวะวา', role: 'ครู' },
-  { groupCodes: ['220009', '220034'], name: 'มะนาวี สาบูดิง', role: 'ครู' },
+  { groupCodes: ['220009', '220034', '230034'], name: 'มะนาวี สาบูดิง', role: 'ครู' },
   { groupCodes: ['220031', '230031'], name: 'ฟาตีเมาะ ปะจูดิง', role: 'ครู' },
   { groupCodes: ['210004', '220004', '230004'], name: 'อามีนา ดามิเด็ง', role: 'ครู' },
   { groupCodes: ['210039', '220041', '230011'], name: 'อาซียะห์ โละมะ', role: 'ครู' },
@@ -27,7 +27,7 @@ export const RAW_TEACHERS: RawTeacherRecord[] = [
   { groupCodes: ['210012', '220012', '230012'], name: 'นาดีญา สาและ', role: 'ครู' },
   { groupCodes: ['210015', '220015', '230015'], name: 'อามลีนา อูมา', role: 'ครู' },
   { groupCodes: ['210010', '220010', '230010'], name: 'อดุลย์ ซะลอ', role: 'ครู' },
-  { groupCodes: ['220042', '230039'], name: 'นุชนารถ แก้วถาวร', role: 'ครู' },
+  { groupCodes: ['220039', '220042', '230039'], name: 'นุชนารถ แก้วถาวร', role: 'ครู' },
 ];
 
 export function getAdvisorForGroup(groupCode: string): string {

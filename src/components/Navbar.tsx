@@ -71,8 +71,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Zone 2: Active User Information or Logged-out State */}
-        {currentUser ? (
+        {/* Zone 2: Active User Information */}
+        {currentUser && (
           <div className="flex items-center gap-3 text-xs">
             <div className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/80 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors">
               {getRoleIcon()}
@@ -94,43 +94,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
           </div>
-        ) : (
-          <div className="hidden sm:flex items-center text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-            <span>กรุณาเข้าสู่ระบบด้วยรหัสนักศึกษา, รหัสกลุ่ม หรือ Admin</span>
-          </div>
         )}
 
         {/* Zone 3: Actions */}
-        <div className="flex items-center gap-2">
-          {currentUser ? (
-            <>
-              <button
-                onClick={onSwitchUserClick}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap"
-                title="เปลี่ยนบทบาทผู้ใช้งาน (นักศึกษา / ครู / Admin)"
-              >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">สลับผู้ใช้</span>
-              </button>
-              <button
-                onClick={onLogout}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
-                title="ออกจากระบบ"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">ออกจากระบบ</span>
-              </button>
-            </>
-          ) : (
+        {currentUser && (
+          <div className="flex items-center gap-2">
             <button
               onClick={onSwitchUserClick}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap"
+              title="เปลี่ยนบทบาทผู้ใช้งาน (นักศึกษา / ครู / Admin)"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>เข้าสู่ระบบ</span>
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">สลับผู้ใช้</span>
             </button>
-          )}
-        </div>
+            <button
+              onClick={onLogout}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
+              title="ออกจากระบบ"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">ออกจากระบบ</span>
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

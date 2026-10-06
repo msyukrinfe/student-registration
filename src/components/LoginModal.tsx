@@ -71,25 +71,30 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   const handleTeacherLogin = (codeToUse?: string) => {
-    const code = (codeToUse || groupCodeInput).trim().toUpperCase();
-    if (!code) {
-      setTeacherError('กรุณากรอกรหัสกลุ่ม');
+    const rawInput = (codeToUse || groupCodeInput).trim();
+    if (!rawInput) {
+      setTeacherError('กรุณากรอกรหัสกลุ่ม เช่น 210008, 220009, 230032');
       return;
     }
 
-    // Check in groups or in RAW_TEACHERS groupCodes
+    const code = rawInput.toUpperCase();
     const foundGroup = groups.find((g) => g.code === code);
-    const teacherMatch = RAW_TEACHERS.find((t) => t.groupCodes.includes(code));
+    const teacherMatch = RAW_TEACHERS.find(
+      (t) => t.groupCodes.includes(code) || t.name.toLowerCase().includes(rawInput.toLowerCase())
+    );
 
     if (!foundGroup && !teacherMatch) {
-      setTeacherError('ไม่พบรหัสกลุ่มนี้ในระบบ กรุณาตรวจสอบอีกครั้งหรือเลือกกลุ่มด้านล่าง');
+      setTeacherError('ไม่พบรหัสกลุ่มหรือชื่อครูนี้ในระบบ กรุณาตรวจสอบรหัสกลุ่ม เช่น 210008, 220009, 230032');
       return;
     }
 
+    const actualCode = foundGroup?.code || teacherMatch?.groupCodes[0] || code;
+    const advisor = teacherMatch?.name || foundGroup?.advisorName || 'ครูประจำกลุ่ม';
+
     const groupObj: Group = foundGroup || {
-      code,
-      name: `กลุ่ม ${code} (${teacherMatch?.name || 'ครูประจำกลุ่ม'})`,
-      advisorName: teacherMatch?.name || 'ครูประจำกลุ่ม',
+      code: actualCode,
+      name: `กลุ่ม ${actualCode} (${advisor})`,
+      advisorName: advisor,
     };
 
     setTeacherError('');
@@ -224,36 +229,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 เข้าสู่ระบบลงทะเบียนเรียน
               </button>
             </form>
-
-            {/* Quick Demo Student Picker from official database */}
-            <div className="pt-2 border-t border-slate-100">
-              <div className="text-[11px] font-medium text-slate-500 mb-2">
-                ตัวอย่างรหัสนักศึกษาจากฐานข้อมูล สกร. อำเภอยี่งอ:
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                {students.slice(0, 10).map((std) => (
-                  <button
-                    key={std.id}
-                    type="button"
-                    onClick={() => {
-                      setStudentIdInput(std.id);
-                      handleStudentLogin(std.id);
-                    }}
-                    className="text-left p-2.5 rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/40 transition-colors text-xs flex flex-col justify-between"
-                  >
-                    <div className="font-semibold text-slate-800 flex items-center justify-between">
-                      <span className="truncate">{std.fullName}</span>
-                      <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
-                        {getLevelLabel(std.level)}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
-                      รหัส: {std.id} · กลุ่ม {std.groupCode}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
@@ -300,36 +275,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 เข้าสู่ระบบครูประจำกลุ่ม
               </button>
             </form>
-
-            {/* Quick Demo Group Picker from PDF 1 */}
-            <div className="pt-2 border-t border-slate-100">
-              <div className="text-[11px] font-medium text-slate-500 mb-2">
-                เลือกรหัสกลุ่มตามรายชื่อครูในฐานข้อมูล (PDF 1):
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                {RAW_TEACHERS.filter((t) => t.role === 'ครู').map((t) => (
-                  <button
-                    key={t.name}
-                    type="button"
-                    onClick={() => {
-                      setGroupCodeInput(t.groupCodes[0]);
-                      handleTeacherLogin(t.groupCodes[0]);
-                    }}
-                    className="text-left p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 transition-colors text-xs"
-                  >
-                    <div className="font-semibold text-slate-800 flex items-center justify-between">
-                      <span>{t.name}</span>
-                      <span className="text-[10px] text-blue-700 font-mono font-bold">
-                        {t.groupCodes[0]}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-slate-500 truncate mt-0.5 font-mono">
-                      กลุ่ม: {t.groupCodes.join(', ')}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
@@ -337,48 +282,36 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {activeTab === 'admin' && (
           <div className="space-y-4">
             <div className="bg-purple-50/60 border border-purple-100 rounded-xl p-3.5 text-xs text-purple-900">
-              <span className="font-semibold">ระบบผู้ดูแลระบบ (Admin Portal):</span> ต้องใช้รหัสผ่าน <span className="font-mono font-bold text-purple-700 bg-purple-100 px-1 rounded">Admin1234</span> ในการเข้าสู่ระบบ
+              <span className="font-semibold">ระบบผู้ดูแลระบบส่วนกลาง (Admin Portal):</span> กรุณากรอกรหัสผ่านผู้ดูแลระบบเพื่อเข้าสู่ระบบ
             </div>
 
             <form onSubmit={handleAdminLogin} className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  เลือกผู้ดูแลระบบ (จากฐานข้อมูล)
+                  บทบาทผู้ใช้งาน
                 </label>
-                <select
-                  value={adminSelectName}
-                  onChange={(e) => setAdminSelectName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="มูฮามดัสกรี ลาบูอาปี">มูฮามดัสกรี ลาบูอาปี (Admin - กลุ่ม 210037, 220037, 230037)</option>
-                  <option value="สุกรี สาเมา๊ะ">สุกรี สาเมา๊ะ (Admin - กลุ่ม 210038, 220038, 230036)</option>
-                  <option value="ผู้ดูแลระบบงานทะเบียน">ผู้ดูแลระบบส่วนกลาง (Central Admin)</option>
-                </select>
+                <div className="px-3.5 py-2 text-xs bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-medium">
+                  ผู้ดูแลระบบส่วนกลาง (Central Admin)
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  รหัสผ่าน Admin (Password)
+                  รหัสผ่าน (Password)
                 </label>
                 <div className="relative">
                   <input
-                    type={showAdminPass ? 'text' : 'password'}
+                    type="password"
                     value={adminPasswordInput}
                     onChange={(e) => {
                       setAdminPasswordInput(e.target.value);
                       if (adminError) setAdminError('');
                     }}
-                    placeholder="กรอกรหัสผ่าน Admin1234"
+                    placeholder="กรอกรหัสผ่านผู้ดูแลระบบ"
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowAdminPass(!showAdminPass)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
-                  >
-                    {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                  <Lock className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
                 </div>
                 {adminError && (
                   <p className="text-xs text-red-600 flex items-center gap-1 mt-1">
@@ -386,16 +319,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     {adminError}
                   </p>
                 )}
-                <div className="mt-1 text-[11px] text-slate-500 flex items-center justify-between">
-                  <span>รหัสผ่านตั้งค่าไว้: <strong className="font-mono text-purple-700">Admin1234</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => setAdminPasswordInput('Admin1234')}
-                    className="text-purple-600 hover:underline text-[11px]"
-                  >
-                    เติมรหัสผ่านอัตโนมัติ
-                  </button>
-                </div>
               </div>
 
               <button
