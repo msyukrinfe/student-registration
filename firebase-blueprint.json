@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "Course": {
+      "title": "Course",
+      "description": "Educational course for registration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "level": { "type": "string", "enum": ["primary", "junior_high", "senior_high"] },
+        "category": { "type": "string", "enum": ["compulsory", "elective"] },
+        "orderNumber": { "type": "number" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "credits": { "type": "number" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["id", "level", "category", "code", "name", "credits"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student registered in the system",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nationalId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "level": { "type": "string", "enum": ["primary", "junior_high", "senior_high"] },
+        "groupCode": { "type": "string" },
+        "groupName": { "type": "string" },
+        "advisorName": { "type": "string" },
+        "phone": { "type": "string" }
+      },
+      "required": ["id", "fullName", "level", "groupCode"]
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "Teacher or Group Advisor",
+      "type": "object",
+      "properties": {
+        "groupCodes": { "type": "array" },
+        "primaryGroupCode": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "fullName": { "type": "string" },
+        "role": { "type": "string", "enum": ["teacher", "admin"] }
+      },
+      "required": ["primaryGroupCode", "fullName", "role"]
+    },
+    "RegistrationRecord": {
+      "title": "RegistrationRecord",
+      "description": "Course registration record for a student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "level": { "type": "string", "enum": ["primary", "junior_high", "senior_high"] },
+        "groupCode": { "type": "string" },
+        "groupName": { "type": "string" },
+        "term": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "status": { "type": "string", "enum": ["not_registered", "draft", "pending_teacher", "approved", "recorded"] },
+        "totalCredits": { "type": "number" },
+        "items": { "type": "array" }
+      },
+      "required": ["id", "studentId", "studentName", "level", "groupCode", "status"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "System-wide registration settings",
+      "type": "object",
+      "properties": {
+        "institutionName": { "type": "string" },
+        "term": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "registrationOpen": { "type": "boolean" },
+        "defaultRegistrarName": { "type": "string" },
+        "maxCreditsPerTerm": { "type": "number" }
+      },
+      "required": ["institutionName", "term", "academicYear"]
+    }
+  },
+  "firestore": {
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Available courses per education level"
+    },
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Student records across all education levels"
+    },
+    "/teachers/{teacherId}": {
+      "schema": "Teacher",
+      "description": "Teachers, group advisors, and admins"
+    },
+    "/registrations/{registrationId}": {
+      "schema": "RegistrationRecord",
+      "description": "Submitted and approved registration sheets"
+    },
+    "/settings/{settingId}": {
+      "schema": "SystemSettings",
+      "description": "System configuration and academic term settings"
+    }
+  }
+}
