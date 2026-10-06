@@ -1282,31 +1282,38 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* Document Preview Modal */}
+      {/* Document Preview Modal (Full-Screen A4, No Frame, No Side Scrollbar, No Header Text) */}
       {previewDoc && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] overflow-y-auto p-4 sm:p-6 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-              <div className="flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-purple-600" />
-                <h3 className="font-bold text-slate-800 text-sm">
-                  ใบลงทะเบียน: {previewDoc.student.fullName} ({previewDoc.student.id})
-                </h3>
-              </div>
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="text-slate-400 hover:text-slate-700 text-sm px-2 py-1 rounded"
-              >
-                ✕ ปิดหน้าต่าง
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 bg-slate-900/90 flex flex-col items-center justify-start overflow-y-auto no-scrollbar p-0 sm:py-6 print:p-0 print:bg-white print:static print:overflow-visible">
+          {/* Floating Action Bar (Screen only) */}
+          <div className="no-print sticky top-3 z-50 mb-4 flex items-center gap-2.5 bg-slate-900/95 text-white backdrop-blur-md px-4 py-2 rounded-2xl shadow-2xl border border-slate-700">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95"
+            >
+              <Printer className="w-4 h-4" />
+              <span>พิมพ์ใบลงทะเบียน A4</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewDoc(null)}
+              className="inline-flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition-colors border border-slate-700"
+            >
+              <span className="text-sm">✕</span>
+              <span>ปิดหน้าต่าง</span>
+            </button>
+          </div>
 
+          {/* Full A4 Document (No frame, no border, single page) */}
+          <div className="w-auto mx-auto print:m-0 print:p-0">
             <RegistrationDocument
               record={previewDoc.record}
               student={previewDoc.student}
               allCoursesForLevel={courses.filter((c) => c.level === previewDoc.student.level)}
               settings={settings}
               onClose={() => setPreviewDoc(null)}
+              hideActionToolbar={true}
             />
           </div>
         </div>

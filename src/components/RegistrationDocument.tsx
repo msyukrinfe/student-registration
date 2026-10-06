@@ -39,6 +39,16 @@ export const RegistrationDocument: React.FC<RegistrationDocumentProps> = ({
   const minElectiveRows = record.level === 'senior_high' ? 11 : 6;
   const electiveRowsCount = Math.max(electiveCourses.length, minElectiveRows);
 
+  // Current date in Thai format (Requirement 3: ช่อง วัน เดือน ปี ที่บันทึกข้อมูล ให้ลงวันที่ปัจจุบัน)
+  const now = new Date();
+  const THAI_MONTHS = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+  ];
+  const currentDay = record.recordDate?.day || String(now.getDate());
+  const currentMonth = record.recordDate?.month || THAI_MONTHS[now.getMonth()];
+  const currentYear = record.recordDate?.year || String(now.getFullYear() + 543);
+
   // Student ID digits formatted into array of 13 boxes (or 10)
   const studentId = record.studentId || student?.id || '';
   const idDigits = studentId.replace(/\D/g, '').padEnd(10, ' ').split('');
@@ -162,16 +172,18 @@ export const RegistrationDocument: React.FC<RegistrationDocumentProps> = ({
         </div>
       )}
 
-      {/* Printable Sheet (Exact replica of the scanned document) */}
-      <div className="flex justify-center bg-slate-200/50 p-2 sm:p-6 print:p-0 print:bg-white overflow-x-auto">
+      {/* Printable Sheet (Exact replica of the scanned document - Single A4 Page) */}
+      <div className="flex justify-center bg-transparent p-0 print:p-0 overflow-visible">
         <div
           ref={documentRef}
-          className="print-container bg-white text-black font-sarabun text-[13px] leading-[1.35] shadow-md print:shadow-none mx-auto box-border"
+          className="printable-a4-sheet bg-white text-black font-sarabun text-[12px] leading-[1.3] shadow-md print:shadow-none mx-auto box-border"
           style={{
             width: '210mm',
-            minHeight: '297mm',
-            padding: '14mm 16mm 12mm 16mm',
+            height: '297mm',
+            maxHeight: '297mm',
+            padding: '10mm 14mm 8mm 14mm',
             boxSizing: 'border-box',
+            overflow: 'hidden',
           }}
         >
           {/* Header Title */}
@@ -388,20 +400,20 @@ export const RegistrationDocument: React.FC<RegistrationDocumentProps> = ({
                 </div>
 
                 <div>
-                  <div className="flex items-baseline justify-between text-[12.5px]">
+                  <div className="flex items-baseline justify-between text-[12px]">
                     <span>วันที่</span>
-                    <span className="border-b border-dotted border-black w-9 text-center">
-                      {record.recordDate?.day || (record.status === 'recorded' ? '5' : '')}
+                    <span className="border-b border-dotted border-black w-9 text-center font-medium">
+                      {currentDay}
                     </span>
                     <span>เดือน</span>
-                    <span className="border-b border-dotted border-black w-24 text-center">
-                      {record.recordDate?.month || (record.status === 'recorded' ? 'ตุลาคม' : '')}
+                    <span className="border-b border-dotted border-black w-24 text-center font-medium">
+                      {currentMonth}
                     </span>
                     <span>พ.ศ.</span>
-                    <span className="border-b border-dotted border-black w-14 text-center">
-                      {record.recordDate?.year || (record.status === 'recorded' ? '2567' : '')}
+                    <span className="border-b border-dotted border-black w-14 text-center font-medium">
+                      {currentYear}
                     </span>
-                    <span className="whitespace-nowrap ml-1">บันทึกข้อมูล</span>
+                    <span className="whitespace-nowrap ml-1 font-medium">บันทึกข้อมูล</span>
                   </div>
                 </div>
               </div>

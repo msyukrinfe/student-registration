@@ -864,32 +864,38 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
         </div>
       )}
 
-      {/* Printable Document Modal */}
+      {/* Printable Document Modal (Requirement 1 & 2: Full-Screen A4, No Frame, No Side Scrollbar, No Header Text) */}
       {showDocModal && previewDocRecord && activeStudent && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl relative p-4 sm:p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4 sticky top-0 bg-white z-10">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  ใบลงทะเบียนเรียน: {activeStudent.fullName} (รหัส {activeStudent.id})
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowDocModal(false)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 bg-slate-900/90 flex flex-col items-center justify-start overflow-y-auto no-scrollbar p-0 sm:py-6 print:p-0 print:bg-white print:static print:overflow-visible">
+          {/* Floating Action Bar (Screen only - No bulky window header) */}
+          <div className="no-print sticky top-3 z-50 mb-4 flex items-center gap-2.5 bg-slate-900/95 text-white backdrop-blur-md px-4 py-2 rounded-2xl shadow-2xl border border-slate-700">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95"
+            >
+              <Printer className="w-4 h-4" />
+              <span>พิมพ์ใบลงทะเบียน A4</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDocModal(false)}
+              className="inline-flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition-colors border border-slate-700"
+            >
+              <X className="w-4 h-4" />
+              <span>ปิดหน้าต่าง</span>
+            </button>
+          </div>
 
+          {/* Full A4 Document (No frame, no border, exact single page) */}
+          <div className="w-auto mx-auto print:m-0 print:p-0">
             <RegistrationDocument
               record={previewDocRecord}
               student={activeStudent}
               allCoursesForLevel={studentLevelCourses}
               settings={settings}
               onClose={() => setShowDocModal(false)}
+              hideActionToolbar={true}
             />
           </div>
         </div>
