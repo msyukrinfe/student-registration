@@ -1,10 +1,10 @@
 import React from 'react';
 import { CurrentUser, EducationLevel } from '../types';
 import { EDUCATION_LEVELS } from '../data/initialData';
-import { GraduationCap, UserCheck, Shield, LogOut, ArrowRightLeft } from 'lucide-react';
+import { GraduationCap, UserCheck, Shield, LogOut, ArrowRightLeft, LogIn } from 'lucide-react';
 
 interface NavbarProps {
-  currentUser: CurrentUser;
+  currentUser: CurrentUser | null;
   onSwitchUserClick: () => void;
   onLogout: () => void;
   term: string;
@@ -19,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   academicYear,
 }) => {
   const getRoleLabel = () => {
+    if (!currentUser) return '';
     switch (currentUser.role) {
       case 'student':
         return 'นักศึกษา';
@@ -30,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const getRoleIcon = () => {
+    if (!currentUser) return null;
     switch (currentUser.role) {
       case 'student':
         return <GraduationCap className="w-4 h-4 text-emerald-600" />;
@@ -69,47 +71,65 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Zone 2: Active User Information */}
-        <div className="flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/80 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors">
-            {getRoleIcon()}
-            <div>
-              <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                <span>{currentUser.name}</span>
-                <span className="text-[11px] font-normal text-slate-500">({getRoleLabel()})</span>
+        {/* Zone 2: Active User Information or Logged-out State */}
+        {currentUser ? (
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/80 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors">
+              {getRoleIcon()}
+              <div>
+                <div className="font-semibold text-slate-800 flex items-center gap-1.5">
+                  <span>{currentUser.name}</span>
+                  <span className="text-[11px] font-normal text-slate-500">({getRoleLabel()})</span>
+                </div>
+                {currentUser.role === 'student' && currentUser.student && (
+                  <div className="text-[11px] text-slate-500">
+                    {getStudentLevelName(currentUser.student.level)} · รหัส {currentUser.student.id}
+                  </div>
+                )}
+                {currentUser.role === 'teacher' && currentUser.group && (
+                  <div className="text-[11px] text-slate-500">
+                    {currentUser.group.name} ({currentUser.group.code})
+                  </div>
+                )}
               </div>
-              {currentUser.role === 'student' && currentUser.student && (
-                <div className="text-[11px] text-slate-500">
-                  {getStudentLevelName(currentUser.student.level)} · รหัส {currentUser.student.id}
-                </div>
-              )}
-              {currentUser.role === 'teacher' && currentUser.group && (
-                <div className="text-[11px] text-slate-500">
-                  {currentUser.group.name} ({currentUser.group.code})
-                </div>
-              )}
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="hidden sm:flex items-center text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+            <span>กรุณาเข้าสู่ระบบด้วยรหัสนักศึกษา, รหัสกลุ่ม หรือ Admin</span>
+          </div>
+        )}
 
         {/* Zone 3: Actions */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={onSwitchUserClick}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap"
-            title="เปลี่ยนบทบาทผู้ใช้งาน (นักศึกษา / ครู / Admin)"
-          >
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">สลับผู้ใช้</span>
-          </button>
-          <button
-            onClick={onLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
-            title="ออกจากระบบ"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">ออก</span>
-          </button>
+          {currentUser ? (
+            <>
+              <button
+                onClick={onSwitchUserClick}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap"
+                title="เปลี่ยนบทบาทผู้ใช้งาน (นักศึกษา / ครู / Admin)"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">สลับผู้ใช้</span>
+              </button>
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
+                title="ออกจากระบบ"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">ออกจากระบบ</span>
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onSwitchUserClick}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>เข้าสู่ระบบ</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

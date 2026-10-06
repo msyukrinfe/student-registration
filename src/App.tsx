@@ -11,7 +11,6 @@ import {
   RegistrationRecord,
   SystemSettings,
   CurrentUser,
-  UserRole,
 } from './types';
 import {
   INITIAL_COURSES,
@@ -21,6 +20,7 @@ import {
   INITIAL_SETTINGS,
 } from './data/initialData';
 import { Navbar } from './components/Navbar';
+import { LoginScreen } from './components/LoginScreen';
 import { LoginModal } from './components/LoginModal';
 import { StudentPortal } from './components/StudentPortal';
 import { TeacherPortal } from './components/TeacherPortal';
@@ -86,15 +86,8 @@ export default function App() {
 
   const [firebaseStatus, setFirebaseStatus] = useState<'connecting' | 'connected' | 'offline'>('connecting');
 
-  // Current logged in user (defaults to authentic student from database)
-  const [currentUser, setCurrentUser] = useState<CurrentUser>(() => {
-    const defaultStudent = INITIAL_STUDENTS[0];
-    return {
-      role: 'student',
-      student: defaultStudent,
-      name: defaultStudent.fullName,
-    };
-  });
+  // CRITICAL REQUIREMENT: When opening the link, ALWAYS start at the Login Screen (currentUser = null)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -205,7 +198,7 @@ export default function App() {
             ...r,
             status: 'approved',
             approvedAt: formattedDate,
-            teacherSignatureName: currentUser.group?.advisorName || r.teacherSignatureName,
+            teacherSignatureName: currentUser?.group?.advisorName || r.teacherSignatureName,
           };
           saveFirestoreRegistration(updated).catch((e) => console.warn(e));
           return updated;
@@ -225,9 +218,13 @@ export default function App() {
     saveFirestoreSettings(newSettings).catch((e) => console.warn(e));
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+  };
+
   // Find current student registration
   const currentStudentRegistration =
-    currentUser.role === 'student' && currentUser.student
+    currentUser?.role === 'student' && currentUser.student
       ? registrations.find(
           (r) =>
             r.studentId === currentUser.student?.id &&
@@ -241,8 +238,14 @@ export default function App() {
       {/* Top Navigation */}
       <Navbar
         currentUser={currentUser}
-        onSwitchUserClick={() => setIsLoginModalOpen(true)}
-        onLogout={() => setIsLoginModalOpen(true)}
+        onSwitchUserClick={() => {
+          if (currentUser) {
+            setIsLoginModalOpen(true);
+          } else {
+            setCurrentUser(null);
+          }
+        }}
+        onLogout={handleLogout}
         term={settings.term}
         academicYear={settings.academicYear}
       />
@@ -272,7 +275,20 @@ export default function App() {
 
       {/* Main Viewport Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {currentUser.role === 'student' && currentUser.student && (
+        {/* If NOT logged in: Show the dedicated Login Screen every time! */}
+        {!currentUser && (
+          <LoginScreen
+            students={students}
+            groups={groups}
+            onLogin={(user) => setCurrentUser(user)}
+            institutionName={settings.institutionName}
+            term={settings.term}
+            academicYear={settings.academicYear}
+          />
+        )}
+
+        {/* If logged in as Student */}
+        {currentUser?.role === 'student' && currentUser.student && (
           <StudentPortal
             student={currentUser.student}
             courses={courses}
@@ -282,7 +298,8 @@ export default function App() {
           />
         )}
 
-        {currentUser.role === 'teacher' && currentUser.group && (
+        {/* If logged in as Teacher */}
+        {currentUser?.role === 'teacher' && currentUser.group && (
           <TeacherPortal
             group={currentUser.group}
             students={students}
@@ -294,7 +311,8 @@ export default function App() {
           />
         )}
 
-        {currentUser.role === 'admin' && (
+        {/* If logged in as Admin */}
+        {currentUser?.role === 'admin' && (
           <AdminPortal
             courses={courses}
             students={students}
@@ -310,18 +328,20 @@ export default function App() {
         )}
       </main>
 
-      {/* Global Login & User Switch Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        students={students}
-        groups={groups}
-        onSelectUser={(user) => {
-          setCurrentUser(user);
-          setIsLoginModalOpen(false);
-        }}
-        currentRole={currentUser.role}
-      />
+      {/* Modal for switching user when already logged in */}
+      {currentUser && (
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          students={students}
+          groups={groups}
+          onSelectUser={(user) => {
+            setCurrentUser(user);
+            setIsLoginModalOpen(false);
+          }}
+          currentRole={currentUser.role}
+        />
+      )}
 
       {/* Footer */}
       <footer className="no-print border-t border-slate-200 bg-white py-6 mt-12 text-center text-xs text-slate-500">
